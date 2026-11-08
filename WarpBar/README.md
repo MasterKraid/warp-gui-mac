@@ -1,24 +1,29 @@
-# WarpBar - Native macOS Menu Bar GUI for Cloudflare WARP
+# WarpBar (`warp-gui-mac`) ☁️
 
-A lightweight, high-performance, native macOS menu bar app for Cloudflare WARP. Built with Swift, AppKit, and SwiftUI, designed to run exclusively in the macOS menu bar (`LSUIElement = true`) with **zero Dock footprint** and minimal resource usage (~1 MB binary).
+A lightweight, native macOS menu bar app for Cloudflare WARP. Built with Swift, AppKit, and SwiftUI, designed to run exclusively in the macOS menu bar (`LSUIElement = true`) with **zero Dock footprint** and minimal resource usage (~1 MB binary).
+
+---
+
+## Credits
+
+Built upon the `warp-cli` terminal toolset created by **Ashutosh Tripathi** ([@zero8dotdev](https://github.com/zero8dotdev)) from [zero8dotdev/warp-cli](https://github.com/zero8dotdev/warp-cli).
 
 ---
 
 ## Features
 
-- **Exclusive Menu Bar Operation**: Runs quietly in the status bar without a Dock icon or application switcher entry.
-- **Dynamic Status Shield**: Dynamic menu bar icon displaying connection status (connected, disconnected, connecting) and network health.
-- **One-Click Master Toggle**: Connect or disconnect from WARP instantly with smooth animations.
-- **Live Public IP**: Real-time public IP detection with a 1-click copy-to-clipboard button.
+- **Exclusive Menu Bar Operation**: Runs quietly in the status bar without a Dock icon (`LSUIElement = true`).
+- **Cloudflare Cloud Icon**: Dynamic white Cloudflare cloud symbol in the menu bar.
+- **Cloudflare Orange Theme**: Polished with `#F6821F` orange accents and SF Pro Rounded typography.
+- **One-Click Master Toggle**: Connect or disconnect from WARP instantly.
+- **Live Public IP**: Real-time public IP detection with a 1-click copy capsule.
 - **Complete CLI Toolset Integration**:
-  - **Connection Modes**: Seamlessly switch between `WARP`, `DoH (1.1.1.1)`, `WARP+DoH`, `SOCKS5 Proxy`, and `Tunnel Only`.
-  - **1.1.1.1 Families**: Enable standard DNS, malware blocking, or adult content filtering with one click.
-  - **Split Tunnel (Exclusions)**: View, filter, add, and remove domain or IP routing exclusions.
+  - **Connection Modes**: `WARP`, `DoH (1.1.1.1)`, `WARP + DoH`, `SOCKS5 Proxy`, `Tunnel Only`.
+  - **1.1.1.1 Content Filtering**: Standard, Malware Protection, Families (Adult + Malware).
+  - **Split Tunnel (Exclusions)**: View, filter, add, and remove routing exclusions.
   - **Live Connection Stats**: View queries, latency, and comprehensive CLI stats.
-  - **Diagnostics**: Run network and tunnel health diagnostics on demand.
-  - **Daemon Management**: Monitor and restart the background `CloudflareWARP` daemon.
-  - **Log Viewer**: Live stream recent daemon logs directly within the popover.
-- **Launch at Login**: Easily toggle autostart on system boot.
+  - **Diagnostics & Tools**: Run network diagnostics, view live logs, and restart the background daemon.
+- **Right-Click Context Menu**: Toggle connection, switch mode, toggle "Start at Login", and Quit.
 
 ---
 
@@ -30,4 +35,3 @@ cd WarpBar
 ```
 
 This compiles the release binary, packages it into `WarpBar.app`, and installs it into `/Applications/WarpBar.app`.
-

@@ -1,186 +1,113 @@
-# warp-cli
+# warp-gui-mac ☁️
 
-> **Simple, fast VPN access from your terminal.**
+> **A sleek, lightweight, native macOS menu bar wrapper for Cloudflare WARP.**
 
-Control Cloudflare WARP with intuitive commands instead of wrestling with menus.
+`warp-gui-mac` replaces the bloated official Cloudflare WARP desktop GUI with a pure native, resource-friendly menu bar experience (`~1 MB`). Styled in signature Cloudflare Orange with modern SF Pro Rounded typography, it runs exclusively in your macOS status bar (`LSUIElement`) with zero Dock clutter.
+
+---
+
+## 👏 Acknowledgements & Credits
+
+This project builds upon the fantastic terminal CLI toolset created by **Ashutosh Tripathi** ([@zero8dotdev](https://github.com/zero8dotdev)) from the original repository:
+👉 **[zero8dotdev/warp-cli](https://github.com/zero8dotdev/warp-cli)**
+
+The underlying Rust CLI wrapper (`warp`) and daemon automation scripts were developed by Ashutosh Tripathi. `warp-gui-mac` integrates this toolset into a polished macOS native GUI interface while preserving full command-line capabilities.
+
+---
+
+## ✨ Features
+
+- **Exclusive Menu Bar Operation**: Runs quietly in your status bar with no Dock icon or `⌘-Tab` switcher footprint (`LSUIElement = true`).
+- **Cloudflare Cloud Status Icon**: Dynamic status bar icon featuring the white Cloudflare cloud symbol that dims when disconnected and brightens when connected.
+- **Cloudflare Orange Theme**: Beautifully crafted with Cloudflare's signature `#F6821F` orange palette and soft translucent glass cards.
+- **Master Quick Toggle**: One-click connection switch with instant visual feedback.
+- **Live Public IP**: Detects and displays your active public IP address with a 1-click copy capsule.
+- **Connection Mode Selector**:
+  - `WARP`: Full VPN encryption with Cloudflare DNS
+  - `DoH (1.1.1.1)`: Private DNS over HTTPS only
+  - `WARP + DoH`: Full VPN tunnel with encrypted DoH
+  - `SOCKS5 Proxy`: Local proxy routing on `127.0.0.1`
+  - `Tunnel Only`: Direct VPN without DNS proxying
+- **1.1.1.1 Content Filtering (Families)**:
+  - `Standard`: Unfiltered high-speed DNS
+  - `Malware`: Blocks known security threats and malware
+  - `Families`: Blocks malware and adult content
+- **Split Tunnel Manager**: View, filter, add, and remove domains or IP addresses that bypass the VPN tunnel.
+- **Real-Time Performance Stats**: Live query counts, DNS latency, and expandable raw CLI metrics.
+- **Diagnostics & Tools**: One-click network diagnostics (`warp diagnose`), daemon status checks, and live log streaming (`cfwarp_service_log.txt`).
+- **Right-Click Context Menu**: Right-click the cloud icon for quick actions:
+  - Toggle Connection
+  - Switch Mode
+  - Restart Daemon
+  - **Start at Login** (`✓` toggle)
+  - **Quit WarpBar** (`⌘Q`)
+
+---
+
+## 🚀 Quick Start
+
+### 1. Prerequisites
+
+Cloudflare WARP's system daemon must be installed on your Mac:
+```bash
+brew install --cask cloudflare-warp
+```
+*(You do not need to keep the official GUI app running; the background daemon `CloudflareWARP` is all that's required).*
+
+### 2. Build & Install the Menu Bar App
+
+Clone the repository and run the packaging script:
 
 ```bash
-warp up              # Connect to WARP
-warp down            # Disconnect
-warp status          # Check your status
+git clone https://github.com/MasterKraid/warp-gui-mac.git
+cd warp-gui-mac
+./WarpBar/bundle.sh
+```
+
+This compiles the release binary with Swift, packages it into `WarpBar.app`, and installs it directly to `/Applications/WarpBar.app`.
+
+### 3. Launch
+
+Open the app from `/Applications` or via terminal:
+```bash
+open /Applications/WarpBar.app
+```
+
+The white Cloudflare cloud will appear in your menu bar ready to use!
+
+---
+
+## 💻 Terminal CLI Usage
+
+You can also control everything directly from your terminal using the included `warp` CLI:
+
+```bash
+warp status                 # Check connection status & public IP
+warp up                     # Connect to WARP
+warp down                   # Disconnect
+warp toggle                 # Toggle connection on/off
+warp mode warp              # Set protocol mode (warp, doh, warp+warp, gateway)
+warp exclude list           # List split-tunnel exclusions
+warp exclude add site.com   # Add domain or IP to split tunnel
+warp exclude remove site.com# Remove from split tunnel
+warp stats                  # Show connection quality & query stats
+warp daemon status          # Check launchd background daemon
+warp logs                   # Stream daemon service logs
+warp diagnose               # Run full network health diagnostics
 ```
 
 ---
 
-## What is WARP?
+## 🛠️ Architecture
 
-Cloudflare WARP is a free VPN service that:
-- **Encrypts your internet traffic** - Your ISP can't see what you're doing
-- **Hides your location** - Websites see Cloudflare's IP, not yours
-- **Blocks malware & trackers** - Cloudflare's network filters out bad stuff
-- **Makes browsing faster** - Cloudflare optimizes your connection
-
-**This CLI works with WARP (the free consumer version).** For enterprise/teams? See [Cloudflare One](https://developers.cloudflare.com/cloudflare-one/team-and-resources/devices/warp/).
-
-[Learn more about WARP →](https://developers.cloudflare.com/cloudflare-one/team-and-resources/devices/warp/)
+- **GUI App (`WarpBar`)**: Native Swift 6 + SwiftUI + AppKit menu bar popover (`WarpBar/Sources/WarpBar`).
+- **CLI Engine (`warp`)**: Rust CLI wrapper communicating with the Cloudflare IPC daemon (`src/`).
+- **Daemon (`CloudflareWARP`)**: Background root launchd daemon (`com.cloudflare.1dot1dot1dot1.macos.warp.daemon`).
 
 ---
 
-## Why Use This CLI?
+## 📄 License & Disclaimer
 
-The official WARP app is designed for people who click menus. If you live in the terminal, this is better:
-
-| Need | Official App | warp-cli |
-|------|--------------|----------|
-| **Quick toggle** | Click menu bar | `warp up` |
-| **Check connection** | Open app | `warp status` |
-| **Scripts & automation** | ❌ Not possible | ✅ Works great |
-| **Low resource usage** | High (GUI overhead) | Low |
-| **Works on servers** | ❌ No GUI | ✅ Works everywhere |
-
----
-
-## 30-Second Setup
-
-One command to install everything:
-
-```bash
-brew tap zero8dotdev/tools
-brew install warp-cli
-```
-
-That's it! The formula automatically:
-- ✅ Installs WARP daemon
-- ✅ Removes the GUI app (you don't need it)
-- ✅ Installs warp-cli
-
-Then use it:
-```bash
-warp up          # Connect to WARP
-warp status      # Check connection
-warp --help      # See all commands
-```
-
----
-
-## Common Commands
-
-```bash
-# Connection control
-warp up                    # Connect to WARP
-warp down                  # Disconnect
-warp toggle                # Switch on/off
-warp status                # Check connection status
-
-# Split tunnel (exclude sites from VPN)
-warp exclude add example.com      # Don't route through WARP
-warp exclude list                 # See all exclusions
-warp exclude remove example.com   # Remove from list
-
-# Info & troubleshooting
-warp stats                 # Show connection quality
-warp logs                  # View recent activity
-warp diagnose              # Run health check
-```
-
-See all commands: `warp --help`
-
----
-
-## Installation Options
-
-**Recommended (easiest):**
-```bash
-brew tap zero8dotdev/tools
-brew install warp-cli
-```
-
-**From source:**
-```bash
-git clone https://github.com/zero8dotdev/warp-cli.git
-cd warp-cli
-./install-complete.sh
-```
-
-**Or with one-liner:**
-```bash
-curl -fsSL https://raw.githubusercontent.com/zero8dotdev/warp-cli/main/install-from-github.sh | bash
-```
-
----
-
-## Need More?
-
-**New to WARP?**
-- [QUICKSTART.md](QUICKSTART.md) - Get running in 5 minutes
-- [Official WARP Documentation](https://developers.cloudflare.com/cloudflare-one/team-and-resources/devices/warp/)
-
-**Want technical details?**
-- [DETAILS.md](DETAILS.md) - How it works under the hood
-- [INSTALLATION.md](INSTALLATION.md) - Troubleshooting & install methods
-- [FRESH_INSTALL.md](FRESH_INSTALL.md) - Clean uninstall & fresh install guide
-- [PROJECT_STORY.md](PROJECT_STORY.md) - Why this was built
-
-**Building AI agents?**
-- [AGENTIC_DEVELOPMENT.md](AGENTIC_DEVELOPMENT.md) - WARP for agent development, testing, deployment
-  - Geographic testing, rate limit protection, secure communication
-  - Implementation patterns with code examples
-  - Multi-agent systems and CI/CD integration
-
-**Want real-world examples?**
-- [USAGE_EXAMPLES.md](USAGE_EXAMPLES.md) - 100+ command examples for scripts & automation
-
-**For developers:**
-- [Homebrew setup guide](HOMEBREW_SETUP.md) - Publishing other tools
-
----
-
-## FAQs
-
-**Q: Do I need to install the WARP app first?**
-A: Yes, the app sets up the VPN daemon that this CLI controls. Think of it as: app = engine, CLI = dashboard.
-
-**Q: Will this work on my Mac?**
-A: Yes, all Macs with Homebrew (Intel or Apple Silicon).
-
-**Q: Is it safe?**
-A: Yes. Cloudflare is a major company. This CLI is just a friendlier way to control their VPN.
-
-**Q: Can I use this on Linux/Windows?**
-A: Not yet. It's macOS-only because WARP daemon integration is macOS-specific.
-
-**Q: Do I pay anything?**
-A: No, WARP is free (with optional paid plans for advanced features).
-
-**Q: Is this for enterprise/teams?**
-A: No, this CLI is for personal/consumer WARP. For enterprise use, see [Cloudflare One](https://developers.cloudflare.com/cloudflare-one/team-and-resources/devices/warp/).
-
-**Q: How much data do I use?**
-A: WARP doesn't count against your ISP's data cap—you're encrypting existing traffic, not adding to it.
-
-**Q: Does closing my terminal stop the VPN?**
-A: No. The WARP daemon is a system service that runs independently. The CLI just sends commands to it. Close your terminal—your VPN stays connected until you run `warp down`.
-
-**Q: Can I script this?**
-A: Yes! Use `warp status --json` to get structured output for scripts.
-
----
-
-## Status
-
-✅ **Production ready** for daily use
-🎓 **Learning project** - demonstrates CLI design, Rust, and macOS integration
-📦 **Open source** - MIT licensed
-
-Not affiliated with Cloudflare. Use WARP according to their [terms of service](https://www.cloudflare.com/terms/).
-
----
-
-## Next Steps
-
-1. **[QUICKSTART.md](QUICKSTART.md)** if you're new to WARP
-2. **Install it** with the command above
-3. **Try it**: `warp up` then `warp status`
-4. **Get help**: `warp --help`
-
-Questions? Issues? See [INSTALLATION.md](INSTALLATION.md) for troubleshooting.
+- **License**: MIT
+- **Attribution**: Based on [`warp-cli`](https://github.com/zero8dotdev/warp-cli) by [Ashutosh Tripathi](https://github.com/zero8dotdev).
+- **Disclaimer**: Not affiliated with, endorsed by, or sponsored by Cloudflare, Inc. Cloudflare and WARP are registered trademarks of Cloudflare, Inc.
