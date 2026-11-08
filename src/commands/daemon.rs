@@ -8,13 +8,17 @@ const DAEMON_LABEL: &str = "com.cloudflare.1dot1dot1dot1.macos.warp.daemon";
 pub fn run(action: Option<DaemonAction>, json: bool, quiet: bool, _verbose: bool) -> Result<()> {
     match action {
         None | Some(DaemonAction::Status) => {
-            let output = Command::new("launchctl")
-                .arg("list")
-                .arg(DAEMON_LABEL)
-                .output()
-                .context("Failed to check daemon status")?;
+            let pgrep = Command::new("pgrep")
+                .arg("-x")
+                .arg("CloudflareWARP")
+                .output();
 
-            if output.status.success() {
+            let is_running = match pgrep {
+                Ok(out) => out.status.success(),
+                Err(_) => false,
+            };
+
+            if is_running {
                 format::success(json, quiet, "✓ Daemon is running");
             } else {
                 format::warning(json, quiet, "✗ Daemon is not running");
