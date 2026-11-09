@@ -1,0 +1,58 @@
+#!/bin/bash
+# Standalone CLI bridge for Cloudflare WARP daemon
+# Maps friendly commands (up, down, toggle, status) directly to warp-cli
+
+WARP_CLI="/usr/local/bin/warp-cli"
+
+if [ ! -x "$WARP_CLI" ]; then
+    if [ -x "/Applications/Cloudflare WARP.app/Contents/Resources/warp-cli" ]; then
+        WARP_CLI="/Applications/Cloudflare WARP.app/Contents/Resources/warp-cli"
+    fi
+fi
+
+case "$1" in
+    up|connect)
+        exec "$WARP_CLI" connect
+        ;;
+    down|disconnect)
+        exec "$WARP_CLI" disconnect
+        ;;
+    toggle)
+        STATUS=$("$WARP_CLI" status 2>/dev/null)
+        if echo "$STATUS" | grep -q "Status update: Connected"; then
+            exec "$WARP_CLI" disconnect
+        else
+            exec "$WARP_CLI" connect
+        fi
+        ;;
+    status)
+        if [ "$2" = "--json" ]; then
+            STATUS=$("$WARP_CLI" status 2>/dev/null)
+            CONNECTED="false"
+            if echo "$STATUS" | grep -q "Status update: Connected"; then
+                CONNECTED="true"
+            fi
+            ESCAPED_RAW=$(echo "$STATUS" | awk '{printf "%s\\n", $0}')
+            echo "{\"connected\": $CONNECTED, \"raw\": \"$ESCAPED_RAW\"}"
+            exit 0
+        else
+            exec "$WARP_CLI" status
+        fi
+        ;;
+    mode)
+        shift
+        exec "$WARP_CLI" mode "$@"
+        ;;
+    stats)
+        exec "$WARP_CLI" stats
+        ;;
+    diagnose)
+        exec "$WARP_CLI" debug network
+        ;;
+    version|--version)
+        echo "warp 1.0.0 (WarpBar CLI Bridge)"
+        ;;
+    *)
+        exec "$WARP_CLI" "$@"
+        ;;
+esac

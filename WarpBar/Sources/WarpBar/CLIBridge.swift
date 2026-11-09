@@ -24,6 +24,7 @@ actor CLIBridge {
     static let shared = CLIBridge()
 
     private let preferredPaths: [String] = [
+        NSHomeDirectory() + "/.local/bin/warp",
         "/opt/homebrew/bin/warp",
         "/usr/local/bin/warp",
         "/usr/local/bin/warp-cli",
@@ -116,7 +117,7 @@ actor CLIBridge {
         if info.raw.isEmpty {
             let cliResult = await execute(binary: "warp-cli", args: ["status"])
             info.raw = cliResult.output
-            info.connected = cliResult.output.contains("Connected")
+            info.connected = cliResult.output.contains("Status update: Connected") || (cliResult.output.contains("Connected") && !cliResult.output.contains("Disconnected"))
         }
 
         // Extract Network health if present in raw
@@ -142,7 +143,15 @@ actor CLIBridge {
 
     func toggleConnection() async -> Bool {
         let result = await execute(binary: "warp", args: ["toggle"])
-        return result.exitCode == 0
+        if result.exitCode == 0 {
+            return true
+        }
+        let status = await getStatus()
+        if status.connected {
+            return await disconnect()
+        } else {
+            return await connect()
+        }
     }
 
     func connect() async -> Bool {

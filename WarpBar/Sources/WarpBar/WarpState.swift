@@ -95,10 +95,15 @@ final class WarpState: ObservableObject {
     // MARK: - Actions
 
     func toggle() {
+        let shouldDisconnect = isConnected
         isConnecting = true
-        statusMessage = isConnected ? "Disconnecting..." : "Connecting..."
+        statusMessage = shouldDisconnect ? "Disconnecting..." : "Connecting..."
         Task {
-            _ = await bridge.toggleConnection()
+            if shouldDisconnect {
+                _ = await bridge.disconnect()
+            } else {
+                _ = await bridge.connect()
+            }
             try? await Task.sleep(nanoseconds: 1_200_000_000)
             await self.refreshAll()
             self.isConnecting = false

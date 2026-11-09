@@ -20,7 +20,7 @@ The underlying Rust CLI wrapper (`warp`) and daemon automation scripts were deve
 - **Exclusive Menu Bar Operation**: Runs quietly in your status bar with no Dock icon or `⌘-Tab` switcher footprint (`LSUIElement = true`).
 - **Cloudflare Cloud Status Icon**: Dynamic status bar icon featuring the white Cloudflare cloud symbol that dims when disconnected and brightens when connected.
 - **Cloudflare Orange Theme**: Beautifully crafted with Cloudflare's signature `#F6821F` orange palette and soft translucent glass cards.
-- **Master Quick Toggle**: One-click connection switch with instant visual feedback.
+- **Master Quick Toggle**: One-click connection switch with instant visual feedback and native fallback directly to `warp-cli`.
 - **Live Public IP**: Detects and displays your active public IP address with a 1-click copy capsule.
 - **Connection Mode Selector**:
   - `WARP`: Full VPN encryption with Cloudflare DNS
@@ -48,13 +48,39 @@ The underlying Rust CLI wrapper (`warp`) and daemon automation scripts were deve
 
 ### 1. Prerequisites
 
-Cloudflare WARP's system daemon must be installed on your Mac:
-```bash
-brew install --cask cloudflare-warp
-```
-*(You do not need to keep the official GUI app running; the background daemon `CloudflareWARP` is all that's required).*
+Cloudflare WARP's system daemon must be installed on your Mac. You can install it via:
 
-### 2. Build & Install the Menu Bar App
+* **Homebrew**:
+  ```bash
+  brew install --cask cloudflare-warp
+  ```
+* **Or Mac App Store**: [Cloudflare WARP on Mac App Store](https://apps.apple.com/app/cloudflare-warp/id1423210915)
+
+---
+
+### 2. Running in Daemon-Only Mode (Zero Bloat)
+
+By default, the official installer places the bloated Flutter/Electron-based GUI in your Login Items. You do **not** need the official GUI app running—only the background root daemon (`CloudflareWARP`) is required.
+
+To permanently prevent the official heavy GUI from launching while keeping the daemon active:
+
+```bash
+# 1. Remove the official GUI from Login Items
+osascript -e 'tell application "System Events" to delete login item "Cloudflare WARP"'
+
+# 2. Terminate the official GUI if currently running
+pkill -x "Cloudflare WARP"
+
+# 3. Disable auto-launch in app preferences
+defaults write ~/Library/Preferences/com.cloudflare.1dot1dot1dot1.macos.plist open_at_login -bool false
+defaults write ~/Library/Preferences/com.cloudflare.1dot1dot1dot1.macos.plist auto_start -bool false
+```
+
+The system daemon (`/Library/LaunchDaemons/com.cloudflare.1dot1dot1dot1.macos.warp.daemon.plist`) will continue running in the background, consuming zero desktop UI memory.
+
+---
+
+### 3. Build & Install the Menu Bar App
 
 Clone the repository and run the packaging script:
 
@@ -66,20 +92,36 @@ cd warp-gui-mac
 
 This compiles the release binary with Swift, packages it into `WarpBar.app`, and installs it directly to `/Applications/WarpBar.app`.
 
-### 3. Launch
+---
+
+### 4. Optional: Install the Standalone CLI Bridge
+
+`WarpBar` includes a native CLI bridge script in `scripts/warp` that connects terminal commands directly to `warp-cli`:
+
+```bash
+mkdir -p ~/.local/bin
+cp scripts/warp ~/.local/bin/warp
+chmod +x ~/.local/bin/warp
+```
+
+Ensure `~/.local/bin` is in your `PATH` (e.g. `export PATH="$HOME/.local/bin:$PATH"`).
+
+---
+
+### 5. Launch
 
 Open the app from `/Applications` or via terminal:
 ```bash
 open /Applications/WarpBar.app
 ```
 
-The white Cloudflare cloud will appear in your menu bar ready to use!
+The white Cloudflare cloud will appear in your macOS menu bar ready to use!
 
 ---
 
 ## 💻 Terminal CLI Usage
 
-You can also control everything directly from your terminal using the included `warp` CLI:
+You can control everything directly from your terminal using `warp` (or official `warp-cli`):
 
 ```bash
 warp status                 # Check connection status & public IP
@@ -100,8 +142,22 @@ warp diagnose               # Run full network health diagnostics
 
 ## 🛠️ Architecture
 
+```
+launchd daemon (root)
+  ↓
+  /Library/LaunchDaemons/com.cloudflare.1dot1dot1dot1.macos.warp.daemon.plist
+  ↓
+  /Applications/Cloudflare WARP.app/Contents/Resources/CloudflareWARP
+  ↓
+  IPC: /var/run/warp_service (Unix socket / gRPC)
+  ↓
+  /usr/local/bin/warp-cli  (Official Cloudflare IPC CLI)
+  ↓
+  WarpBar.app  (Native Swift + SwiftUI + AppKit Menu Bar App)
+```
+
 - **GUI App (`WarpBar`)**: Native Swift 6 + SwiftUI + AppKit menu bar popover (`WarpBar/Sources/WarpBar`).
-- **CLI Engine (`warp`)**: Rust CLI wrapper communicating with the Cloudflare IPC daemon (`src/`).
+- **CLI Engine (`warp`)**: Command-line wrapper communicating with `warp-cli` and Cloudflare IPC daemon.
 - **Daemon (`CloudflareWARP`)**: Background root launchd daemon (`com.cloudflare.1dot1dot1dot1.macos.warp.daemon`).
 
 ---
