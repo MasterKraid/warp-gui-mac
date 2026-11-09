@@ -56,3 +56,4 @@ case "$1" in
         exec "$WARP_CLI" "$@"
         ;;
 esac
+
